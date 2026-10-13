@@ -17,8 +17,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: barichello/godot-ci:4.3
+container:
+  image: barichello/godot-ci:4.3
+  env:
+    GODOT_VERSION: "4.3"
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
