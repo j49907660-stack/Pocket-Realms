@@ -171,33 +171,16 @@ func _build_world() -> void:
 			var kinds: Array = area["types"]
 			_spawn_monster(kinds[j % kinds.size()], area["level"] + j % 3, pos)
 	_spawn_monster("Ash Guardian", 20, Vector3(DUNGEON.x, 0.1, DUNGEON.y), true)
-var camera := Camera3D.new()
-player.add_child(camera)
-
-camera.position = Vector3(0, 25, 28)
-camera.look_at_from_position(
-    Vector3(0, 25, 28),
-    Vector3(0, 1, 0),
-    Vector3.UP
-)
-camera.current = true
-camera.fov = 53.0
-camera.cull_mask = 0xFFFFF
-camera.near = 0.05
-camera.far = 1000.0
-
-var test_cube := MeshInstance3D.new()
-var test_mesh := BoxMesh.new()
-test_mesh.size = Vector3(5, 5, 5)
-test_cube.mesh = test_mesh
-test_cube.position = Vector3(0, 2, -10)
-
-var test_material := StandardMaterial3D.new()
-test_material.albedo_color = Color.RED
-test_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-test_cube.material_override = test_material
-
-camera.add_child(test_cube)
+	# Third-person angled camera, attached to the player.
+	# Godot cameras look along their local negative Z axis.
+	var camera := Camera3D.new()
+	player.add_child(camera)
+	camera.position = Vector3(0, 23, 25)
+	camera.look_at(Vector3(0, 1, 0), Vector3.UP)
+	camera.fov = 53.0
+	camera.near = 0.05
+	camera.far = 1000.0
+	camera.current = true
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55, 30, 0)
 	sun.light_energy = 1.2
