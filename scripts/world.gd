@@ -173,7 +173,7 @@ func _build_world() -> void:
 	_spawn_monster("Ash Guardian", 20, Vector3(DUNGEON.x, 0.1, DUNGEON.y), true)
 	var camera := Camera3D.new()
 	camera.position = Vector3(0, 23, 25)
-	camera.rotation_degrees = Vector3(-43, 0, 0)
+	camera.rotation_degrees = Vector3(43, 0, 0)
 	camera.current = true
 	camera.fov = 53.0
 	player.add_child(camera)
