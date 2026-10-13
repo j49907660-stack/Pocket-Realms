@@ -182,6 +182,22 @@ camera.look_at_from_position(
 )
 camera.current = true
 camera.fov = 53.0
+camera.cull_mask = 0xFFFFF
+camera.near = 0.05
+camera.far = 1000.0
+
+var test_cube := MeshInstance3D.new()
+var test_mesh := BoxMesh.new()
+test_mesh.size = Vector3(5, 5, 5)
+test_cube.mesh = test_mesh
+test_cube.position = Vector3(0, 2, -10)
+
+var test_material := StandardMaterial3D.new()
+test_material.albedo_color = Color.RED
+test_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+test_cube.material_override = test_material
+
+camera.add_child(test_cube)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55, 30, 0)
 	sun.light_energy = 1.2
