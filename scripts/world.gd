@@ -114,15 +114,40 @@ func _path(points: Array, width: float, color: Color) -> void:
 		segment.rotation.y = -atan2(b.x - a.x, b.y - a.y)
 
 func _tree(x: float, z: float, size: float) -> void:
-	_box(self, Vector3(0.6 * size, 2.3 * size, 0.6 * size), Vector3(x, 1.15 * size, z), Color("876044"))
-	_ball(self, 1.5 * size, Vector3(x, 3.0 * size, z), Color("399e6e") if rng.randf() > 0.5 else Color("61b678"))
-	_ball(self, 0.9 * size, Vector3(x + 0.7 * size, 3.25 * size, z), Color("4fac76"))
+	# Layered canopies make trees readable from the elevated camera.
+	var trunk := Color("75553d")
+	var foliage := Color("3e8963") if rng.randf() > 0.5 else Color("5b9b65")
+	_box(self, Vector3(0.54 * size, 2.6 * size, 0.54 * size), Vector3(x, 1.3 * size, z), trunk)
+	_ball(self, 1.20 * size, Vector3(x, 2.8 * size, z), foliage, Vector3(1.0, 0.85, 1.0))
+	_ball(self, 1.05 * size, Vector3(x - 0.48 * size, 3.4 * size, z + 0.3 * size), foliage.lightened(0.13))
+	_ball(self, 0.87 * size, Vector3(x + 0.62 * size, 3.6 * size, z - 0.3 * size), foliage.lightened(0.07))
+
+func _roof(x: float, z: float, tint: Color) -> void:
+	# Two pitched roof slopes instead of a flat colored box.
+	for side in [-1.0, 1.0]:
+		var slope := _box(self, Vector3(3.55, 0.30, 5.3), Vector3(x + side * 1.32, 3.82, z), tint)
+		slope.rotation.z = side * 0.48
+	_box(self, Vector3(0.28, 0.28, 5.5), Vector3(x, 4.43, z), tint.darkened(0.17))
 
 func _house(x: float, z: float, color: Color) -> void:
-	_box(self, Vector3(5.0, 3.0, 4.6), Vector3(x, 1.5, z), Color("f0d6a0"))
-	_box(self, Vector3(5.7, 0.9, 5.3), Vector3(x, 3.4, z), color)
-	_box(self, Vector3(1.1, 2.0, 0.13), Vector3(x, 1.0, z + 2.36), Color("78513e"))
-	_box(self, Vector3(0.9, 0.9, 0.14), Vector3(x - 1.45, 2.0, z + 2.36), Color("77c8dd"))
+	_box(self, Vector3(5.0, 3.0, 4.6), Vector3(x, 1.5, z), Color("e3c99d"))
+	_box(self, Vector3(5.1, 0.35, 4.8), Vector3(x, 0.2, z), Color("9d9783"))
+	_roof(x, z, color)
+	_box(self, Vector3(1.1, 2.0, 0.13), Vector3(x, 1.0, z + 2.36), Color("79513c"))
+	_box(self, Vector3(1.4, 0.15, 0.26), Vector3(x, 2.08, z + 2.42), Color("a7794c"))
+	_box(self, Vector3(1.02, 1.02, 0.15), Vector3(x - 1.48, 2.0, z + 2.36), Color("9ed3dc"))
+	_box(self, Vector3(0.13, 1.13, 0.21), Vector3(x - 1.48, 2.0, z + 2.47), Color("eee2c2"))
+	_box(self, Vector3(1.13, 0.13, 0.21), Vector3(x - 1.48, 2.0, z + 2.47), Color("eee2c2"))
+	# Chimney.
+	_box(self, Vector3(0.72, 1.35, 0.72), Vector3(x + 1.4, 4.24, z - 1.2), Color("a87967"))
+
+func _rock(x: float, z: float, size: float) -> void:
+	var rock := _ball(self, size, Vector3(x, 0.23 * size, z), Color("91958b"), Vector3(1.25, 0.48, 0.85))
+	rock.rotation.y = rng.randf_range(-1.5, 1.5)
+
+func _bush(x: float, z: float, size: float) -> void:
+	_ball(self, size, Vector3(x, size * 0.55, z), Color("3e8c59"), Vector3(1.25, 0.65, 1.0))
+	_ball(self, size * 0.7, Vector3(x + size * 0.6, size * 0.7, z), Color("69a75b"))
 
 func _inside_island(x: float, z: float) -> bool:
 	var u := x / 85.0
@@ -132,7 +157,7 @@ func _inside_island(x: float, z: float) -> bool:
 
 func _build_world() -> void:
 	# A procedurally assembled island made from square ground cells, with an irregular coastline.
-	_box(self, Vector3(200, 0.25, 200), Vector3(0, -0.6, 0), Color("5aaed0"))
+	_box(self, Vector3(200, 0.25, 200), Vector3(0, -0.6, 0), Color("69b6cf"))
 	# Draw all grass cells in a single MultiMesh draw call instead of ~1500 separate materials/meshes.
 	var cells: Array[Vector3] = []
 	for ix in range(-22, 23):
@@ -151,16 +176,16 @@ func _build_world() -> void:
 		grass_instances.set_instance_transform(i, Transform3D(Basis.IDENTITY, cells[i]))
 	var grass_node := MultiMeshInstance3D.new()
 	grass_node.multimesh = grass_instances
-	grass_node.material_override = _mat(Color("83c96e"))
+	grass_node.material_override = _mat(Color("81b878"))
 	add_child(grass_node)
 	# Routes connect the town to the far end of the island.
-	_path(road_points, 4.6, Color("e8ce93"))
-	_path([TOWN, Vector2(-23, 59), PORT], 4.0, Color("e8ce93"))
-	_path([Vector2(-14, 6), Vector2(-42, -22)], 3.1, Color("d9be85"))
-	_path([Vector2(-3, 26), Vector2(36, 34)], 3.1, Color("d9be85"))
-	_path([Vector2(7, -14), Vector2(41, -17)], 3.1, Color("d9be85"))
+	_path(road_points, 4.6, Color("d7bf91"))
+	_path([TOWN, Vector2(-23, 59), PORT], 4.0, Color("d7bf91"))
+	_path([Vector2(-14, 6), Vector2(-42, -22)], 3.1, Color("c9b184"))
+	_path([Vector2(-3, 26), Vector2(36, 34)], 3.1, Color("c9b184"))
+	_path([Vector2(7, -14), Vector2(41, -17)], 3.1, Color("c9b184"))
 	# One town and one port.
-	_box(self, Vector3(25, 0.09, 21), Vector3(TOWN.x, 0.07, TOWN.y), Color("e4ce9f"))
+	_box(self, Vector3(25, 0.09, 21), Vector3(TOWN.x, 0.07, TOWN.y), Color("d8c6a2"))
 	for house in [Vector2(-20, 43), Vector2(-7, 42), Vector2(2, 44), Vector2(-20, 55), Vector2(-8, 58), Vector2(3, 55)]:
 		_house(house.x, house.y, Color("c96858") if rng.randf() > 0.5 else Color("8b83bd"))
 	_box(self, Vector3(12, 0.4, 7), Vector3(PORT.x, 0.0, PORT.y), Color("8c6645"))
@@ -181,6 +206,26 @@ func _build_world() -> void:
 			if Vector2(x, z).distance_to(point) < 7.0: near_road = true
 		if near_road: continue
 		_tree(x, z, rng.randf_range(0.7, 1.4))
+	# Small environmental details, away from the main town and the road.
+	for i in range(100):
+		var x := rng.randf_range(-77.0, 77.0)
+		var z := rng.randf_range(-77.0, 77.0)
+		if not _inside_island(x, z): continue
+		if Vector2(x, z).distance_to(TOWN) < 18.0: continue
+		if rng.randf() < 0.42:
+			_rock(x, z, rng.randf_range(0.4, 1.2))
+		else:
+			_bush(x, z, rng.randf_range(0.4, 0.95))
+	# Town square and a recognizable central landmark.
+	_box(self, Vector3(4.0, 0.25, 4.0), Vector3(TOWN.x, 0.16, TOWN.y), Color("a7a69a"))
+	_box(self, Vector3(0.85, 2.6, 0.85), Vector3(TOWN.x, 1.5, TOWN.y), Color("b6b4a2"))
+	_ball(self, 0.72, Vector3(TOWN.x, 3.05, TOWN.y), Color("d8b36d"))
+	# A few stone fragments around the dungeon entrance.
+	for j in range(12):
+		var theta := float(j) * TAU / 12.0
+		var px := DUNGEON.x + cos(theta) * 10.5
+		var pz := DUNGEON.y + sin(theta) * 10.5
+		if _inside_island(px, pz): _rock(px, pz, rng.randf_range(0.7, 1.5))
 	player = CharacterBody3D.new()
 	player.set_script(PlayerScript)
 	player.position = Vector3(TOWN.x, 0.1, TOWN.y - 14)
@@ -208,7 +253,7 @@ func _build_world() -> void:
 	var env := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color("a6d9ed")
+	e.background_color = Color("a8d6e5")
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	e.ambient_light_color = Color.WHITE
 	e.ambient_light_energy = 0.8
